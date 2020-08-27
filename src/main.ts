@@ -29,27 +29,28 @@ async function getShuffle(playlistId : string) : Promise<string[]> {
 	return videoIDs;
 }
 
-gapi.load("client", () => {
+gapi.load("client", async () => {
 	console.log("gapi client loaded")
 	gapi.client.setApiKey("AIzaSyDXRIzo7LqFvo3QTdirH0Zgvqmxk1MyjM0");
-	gapi.client.load('youtube', 'v3', async () => {
-		console.log("gapi youtube loaded");
-		console.dir(gapi.client.youtube);
-		let videos : string[] = [];
-		let player = new YTPlayer('#player');
-		let index = 0;
-		const playNext = async () => {
-			if (index >= videos.length) {
-				videos = await getShuffle("PLdD9nAspvXi7yD6j2AV-1Do21d4oNdTPi");
-				index = 0;
-			}
-			console.log(`playing ${videos[index]}`);
-			player.load(videos[index++], true);
-		};
-		await playNext();
-		player.on('unplayable', playNext);
-		player.on('error', playNext);
-		player.on('ended', playNext);
-		console.log("callbacks set");
-	});
+
+	await gapi.client.load('youtube', 'v3');
+	console.log("gapi youtube loaded");
+	console.dir(gapi.client.youtube);
+
+	let videos : string[] = [];
+	let player = new YTPlayer('#player');
+	let index = 0;
+	const playNext = async () => {
+		if (index >= videos.length) {
+			videos = await getShuffle("PLdD9nAspvXi7yD6j2AV-1Do21d4oNdTPi");
+			index = 0;
+		}
+		console.log(`playing ${videos[index]}`);
+		player.load(videos[index++], true);
+	};
+	await playNext();
+	player.on('unplayable', playNext);
+	player.on('error', playNext);
+	player.on('ended', playNext);
+	console.log("callbacks set");
 });
