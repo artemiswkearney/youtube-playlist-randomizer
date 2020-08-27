@@ -33,7 +33,8 @@ gapi.load("client", () => {
 	console.log("gapi client loaded")
 	gapi.client.setApiKey("AIzaSyDXRIzo7LqFvo3QTdirH0Zgvqmxk1MyjM0");
 	gapi.client.load('youtube', 'v3', async () => {
-		console.log("gapi youtube loaded")
+		console.log("gapi youtube loaded");
+		console.dir(gapi.client.youtube);
 		let videos : string[] = [];
 		let player = new YTPlayer('#player');
 		let index = 0;
