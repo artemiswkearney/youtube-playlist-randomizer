@@ -21,28 +21,24 @@ async function getShuffle(playlistId : string) : Promise<string[]> {
 		else break;
 	}
 	// shuffle
+	let temp : string;
 	for (let i = videoIDs.length; i > 0; i--) {
 		const j = Math.floor(Math.random() * i);
-		videoIDs[i], videoIDs[j] = videoIDs[j], videoIDs[i];
+		temp = videoIDs[i];
+		videoIDs[i] = videoIDs[j];
+		videoIDs[j] = temp;
 	}
 	console.log(`found ${videoIDs.length} videos`);
 	return videoIDs;
 }
 
-gapi.load("client", async () => {
-	console.log("gapi client loaded")
-	gapi.client.setApiKey("AIzaSyDXRIzo7LqFvo3QTdirH0Zgvqmxk1MyjM0");
-
-	await gapi.client.load('youtube', 'v3');
-	console.log("gapi youtube loaded");
-	console.dir(gapi.client.youtube);
-
+async function shuffle(playlist : string, nextButton : HTMLButtonElement) {
 	let videos : string[] = [];
 	let player = new YTPlayer('#player');
 	let index = 0;
 	const playNext = async () => {
 		if (index >= videos.length) {
-			videos = await getShuffle("PLdD9nAspvXi7yD6j2AV-1Do21d4oNdTPi");
+			videos = await getShuffle(playlist);
 			index = 0;
 		}
 		console.log(`playing ${videos[index]}`);
@@ -52,5 +48,29 @@ gapi.load("client", async () => {
 	player.on('unplayable', playNext);
 	player.on('error', playNext);
 	player.on('ended', playNext);
-	console.log("callbacks set");
+
+	nextButton.onclick = playNext;
+	nextButton.disabled = false;
+}
+
+gapi.load("client", async () => {
+	console.log("gapi client loaded")
+	gapi.client.setApiKey("AIzaSyDXRIzo7LqFvo3QTdirH0Zgvqmxk1MyjM0");
+
+	await gapi.client.load('youtube', 'v3');
+	console.log("gapi youtube loaded");
+
+	const playlistField = document.getElementById("playlist") as HTMLInputElement;
+	const selectButton = document.getElementById("selectPlaylist") as HTMLButtonElement;
+	const nextButton = document.getElementById("next") as HTMLButtonElement;
+
+	selectButton.onclick = async () => {
+		// this *should* parse either a raw playlist ID or a playlist URL
+		const regex = /(?:^.*(?:youtu.be\/|list=))?([^#\&\?]*).*/;
+		const match = playlistField.value.match(regex);
+		if (match && match[1]) {
+			shuffle(match[1], nextButton);
+		}
+	};
+	selectButton.disabled = false;
 });
