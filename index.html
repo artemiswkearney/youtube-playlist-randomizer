@@ -7,13 +7,16 @@
 	<body>
 		<script src="main.js"></script>
 		<h1>Youtube Playlist Randomizer</h1>
-		<span>Shuffles a public YouTube playlist (not just the first 200 videos).</span>
+		<span>Shuffles together public YouTube playlists (and not just the first 200 videos).</span>
+		<br>
 		<br>
 
-		<label for="playlist">Playlist to shuffle:</label>
-		<input type="text" id="playlist" name="playlist" autofocus placeholder="playlist URL or ID">
+		<label for="playlists">Playlists to shuffle (one per line):</label>
+		<br>
+		<textarea id="playlists" name="playlists" autofocus placeholder="playlist URLs or IDs, newline separated"></textarea>
+		<br>
 
-		<button type="button" id="selectPlaylist" name="selectPlaylist" disabled>Shuffle!</button>
+		<button type="button" id="selectPlaylists" name="selectPlaylists" disabled>Shuffle!</button>
 		<br>
 
 		<div id="player"></div>

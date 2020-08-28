@@ -3,22 +3,25 @@
 
 import YTPlayer from 'yt-player';
 
-async function getShuffle(playlistId : string) : Promise<string[]> {
+async function getShuffle(playlistIDs : string[]) : Promise<string[]> {
 	let pageToken : string | undefined = undefined;
 	let videoIDs : string[] = [];
-	while (true) {
-		let page = await gapi.client.youtube.playlistItems.list({
-			playlistId,
-			part: "contentDetails",
-			maxResults: 50,
-			pageToken: pageToken,
-		});
-		videoIDs = videoIDs.concat((page.result.items ?? []).map(item => item.contentDetails?.videoId ?? "").filter(v => !!v));
-		if (page.result.nextPageToken) {
-			// no idea why this assertion is needed
-			pageToken = page.result.nextPageToken as string;
+	for (const playlistId of playlistIDs) {
+		while (true) {
+			let page = await gapi.client.youtube.playlistItems.list({
+				playlistId,
+				part: "contentDetails",
+				maxResults: 50,
+				pageToken: pageToken,
+			});
+			videoIDs = videoIDs.concat((page.result.items ?? []).map(item => item.contentDetails?.videoId ?? "").filter(v => !!v));
+			if (page.result.nextPageToken) {
+				// no idea why this assertion is needed
+				pageToken = page.result.nextPageToken as string;
+			}
+			else break;
 		}
-		else break;
+		pageToken = undefined;
 	}
 	// shuffle
 	let temp : string;
@@ -32,13 +35,13 @@ async function getShuffle(playlistId : string) : Promise<string[]> {
 	return videoIDs;
 }
 
-async function shuffle(playlist : string, nextButton : HTMLButtonElement) {
+async function shuffle(playlists : string[], nextButton : HTMLButtonElement) {
 	let videos : string[] = [];
 	let player = new YTPlayer('#player');
 	let index = 0;
 	const playNext = async () => {
 		if (index >= videos.length) {
-			videos = await getShuffle(playlist);
+			videos = await getShuffle(playlists);
 			index = 0;
 		}
 		console.log(`playing ${videos[index]}`);
@@ -60,17 +63,19 @@ gapi.load("client", async () => {
 	await gapi.client.load('youtube', 'v3');
 	console.log("gapi youtube loaded");
 
-	const playlistField = document.getElementById("playlist") as HTMLInputElement;
-	const selectButton = document.getElementById("selectPlaylist") as HTMLButtonElement;
+	const playlistsField = document.getElementById("playlists") as HTMLTextAreaElement;
+	const selectButton = document.getElementById("selectPlaylists") as HTMLButtonElement;
 	const nextButton = document.getElementById("next") as HTMLButtonElement;
 
 	selectButton.onclick = async () => {
 		// this *should* parse either a raw playlist ID or a playlist URL
 		const regex = /(?:^.*(?:youtu.be\/|list=))?([^#\&\?]*).*/;
-		const match = playlistField.value.match(regex);
-		if (match && match[1]) {
-			shuffle(match[1], nextButton);
-		}
+		const newline = /\r\n|\r|\n/;
+		const lines = playlistsField.value.split(newline);
+		const ids = lines.map(line => line.match(regex))
+			.map(match => (match && match[1]) || "")
+			.filter(id => !!id);
+		shuffle(ids, nextButton);
 	};
 	selectButton.disabled = false;
 });
